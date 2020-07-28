@@ -1,10 +1,10 @@
-import * as _ from 'lodash';
+import * as _ from "lodash";
 
 export default class jobRunnerInterface {
     public jobIds: Array<String> = [];
     private pollId: number | undefined;
     private jobStatus: Array<Object> = [];
-
+    private static parameterString: String = "";
     constructor(jobIds?: any) {
         if (_.isString(jobIds)) {
             this.jobIds = [jobIds];
@@ -12,11 +12,48 @@ export default class jobRunnerInterface {
             this.jobIds = jobIds;
         }
     }
-    
-    public static async createJob(jobParameters: JobParameters) {
-        let response = await fetch('./ssssss');
-        let data = await response.json();
-        return data;
+
+    public static async createJob({ params, targetURL, body, method, key, onsuccess, onfailure }: JobParameters) {
+        // params are the parameters sent to the targetURL when the job runs
+        // targetURL is the url the job runner will hit
+        // body will be the body of the request made by the job runnner
+        // method will be the type of method the job runner will use against the targetURL
+        // key is the api key to make the request
+        if (targetURL) {
+            if (params && !_.isEmpty(params)) {
+                _.forOwn(params, (value: any, prop: any) => {
+                    if (value !== undefined) {
+                        this.parameterString += `${prop}=${value}&`;
+                    }
+                });
+                this.parameterString = this.parameterString.slice(0, -1); // this has been changed to remove slice. It is to remove the last ampersand from the string
+            }
+            this.parameterString += "&api_key={{apikey}}";
+            const url = AjaxUtils.apiBaseUrl + targetURL + `?${this.parameterString}`;
+            const requestBody = {
+                url,
+                method,
+                body,
+                key,
+                onsuccess: onsuccess || [],
+                onfailure: onfailure || [],
+            };
+            let data = await fetch("job", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody),
+            })
+            let response = await data.json();            
+            const responseData = response.data as string[];
+            if (!_.isEmpty(responseData)) {
+                return responseData[0];
+            }
+            throw Error("Erroneous response received by JobRunnerInterface's createJob method.");
+        } else {
+            return Promise.reject("Target URL parameter is empty");
+        }
     }
 }
 
@@ -64,7 +101,7 @@ return enqueueJob(
     })
     private async poll() {
         try {
-            let res = await fetch('./testRes.json');
+            let res = await fetch("./testRes.json");
             let { response } = await res.json();
             this.jobStatus.push({ message: `${response.statusMessage} ${Date.now()}` });
         } catch (e) {
@@ -91,3 +128,7 @@ return enqueueJob(
 //     getJobStatus(Array<Id>: jobs / or / String: jobId) {}
 //     rerunJob(Array<Id>: jobs / or / String: jobId) {}
 // }
+
+class AjaxUtils {
+    public static apiBaseUrl = "https://example.com/api/";
+}

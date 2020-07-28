@@ -11,10 +11,10 @@ test("stores jobIds as an array", () => {
 
 test("creates a job using createJob", async () => {
     // implement without instantiation
-    mockSuccesfulResponse(200, ['test1234'])
+    mockSuccesfulResponse(200, ['test1234 completed'])
     const response = await jobRunnerInterface.createJob(mockRequest("POST"));
-    console.log(response);
-    expect(response).toEqual(['test1234']);
+    expect(response).toEqual('test1234 completed');
+    expect(globalThis.fetch)
 })
 
 test("creates a masterJob using createJob", () => {
@@ -44,9 +44,9 @@ const mockSuccesfulResponse = (status: Number, response: any): void => {
             resolve({
                 ok: true,
                 status,
-                json: () => {
-                    return response ? response : "";
-                },
+                json: () => (
+                    { data: response }
+                ),
             });
         });
     });
