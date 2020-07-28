@@ -12,7 +12,56 @@ export default class jobRunnerInterface {
             this.jobIds = jobIds;
         }
     }
+    
+    public static async createJob(jobParameters: JobParameters) {
+        let response = await fetch('./ssssss');
+        let data = await response.json();
+        return data;
+    }
+}
 
+interface JobParameters { //import this from job-runner.d.ts
+    targetURL?: string;
+    method?: string;
+    params?: any;
+    body?: any;
+    key?: string;
+    foreach?: {
+        url?: string;
+        method?: string;
+        body?: string;
+        ids?: string;
+    };
+    onsuccess?: ChildJob[];
+    onfailure?: ChildJob[];
+    queue?: string;
+    continueon?: number; // 0 - AnyResult(All finished), 1 - Success (default)
+}
+
+interface ChildJob {
+    foreach?: {
+        url?: string;
+        method?: string;
+    };
+    url?: string;
+    method?: string;
+    key?: string;
+    order?: number;
+    body?: any;
+    onsuccess?: ChildJob[];
+    onfailure?: ChildJob[];
+    continueon?: number;
+}
+/*
+return enqueueJob(
+    getState,
+    {
+        targetURL: "trading/rebalance",
+        method: "POST",
+        params: requestParams,
+        key: folioId,
+        body: priceOverride,
+    })
     private async poll() {
         try {
             let res = await fetch('./testRes.json');
@@ -29,16 +78,7 @@ export default class jobRunnerInterface {
             (interval * 1000)
         );
     }
-
-    public getStatus(): Array<Object> {
-        return this.jobStatus;
-    }
-
-    public stopPolling(): String {
-        clearInterval(this.pollId);
-        return 'Polling has stopped';
-    }
-}
+*/
 
 // export class jobRunnerInterface {
 //     constructor(Array: jobIds, String: jobId, null){}
